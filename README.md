@@ -11,4 +11,4 @@
 1. 首先部署一个meme-generator的web服务, 我这里使用docker部署, 详细部署方式, 可见上面第一个开源项目
 2. 完善config.properties, 主要是指定好meme-generator web服务的地址
 3. 使用pip安装好项目依赖(应该是只有requests和itchat-uos-fix, 记不太清了, 如果运行时, 提示还缺依赖, 缺啥安装啥就行)
-4. 执行`python3 main.py`即可
+4. 执行`python3 main.py`, 然后会在项目目录的resource/user/login.png生成一个二维码, 用当作机器人的微信号扫码登录即可
