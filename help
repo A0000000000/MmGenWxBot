@@ -1,0 +1,27 @@
+1. bot简介:
+    机器人用于生成特定的meme图
+    可生成的图片依赖于项目: https://github.com/MeetWq/meme-generator/blob/main/docs/memes.md
+
+2. 使用说明:
+    2.1. 基础命令:
+        * 基本格式: @bot cmd [operator] [...args]
+        * 命令列表:
+            * whoami: 查询用户身份
+            * keys: 查询所有可生成的图片
+            * keyinfo [key]: 查询某个关键词的生成规则, key: 关键词
+            * add [role] [...args]: 添加一个用户, role: 身份, args: 用户列表
+            * remove [role] [...args]: 同上
+        * 使用样例:
+            * @bot cmd whoami: 机器人会返回你的身份
+    2.2. 生成meme图:
+        * 基本格式: @bot keyword *[#pic] *[count] [...text args]
+        * 解释:
+            * keyword: 生成图片的关键词
+            * #pic: 可选参数, 代表生成的图片需要图片参数
+            * count: 可选参数, 必须搭配#pic使用, 代表目标图片需要几张图片
+            * text args: 生成图片所需的文本列表
+        * 注: 如果选择携带图片生成目标图片, 发送完指令后需要发送目标图片数量后才会进行图片生成
+
+3. 其他
+    3.1. 机器人暂时只支持图片/文本形式生成图片, 正则/生成模式等暂不支持
+    3.2. 微信自己限制, 生成图片大于1M时, 无法通过图片形式发送, 只能通过文件形式发送

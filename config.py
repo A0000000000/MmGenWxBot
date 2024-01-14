@@ -38,6 +38,10 @@ def get_user_path():
     return get_config('auth', 'user')
 
 
+def get_help():
+    return get_config('resource', 'help')
+
+
 def init_root_path():
     root_path = get_config('resource', 'rootPath')
     if not os.path.exists(root_path):

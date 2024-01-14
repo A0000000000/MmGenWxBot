@@ -213,8 +213,10 @@ def process_cmd(current_session, cmds):
         return
     cmd = cmds[2]
     if cmd == 'help':
-        help_text = '暂无使用说明.'
-        send_message(current_session, '@%s\u2005 %s' % (current_session['session_username'], help_text))
+        with open(config.get_help(), 'r', encoding='UTF-8') as f:
+            help_text = f.read()
+            send_message(current_session, '@%s\u2005 \n%s' % (current_session['session_username'], help_text))
+            f.close()
     elif cmd == 'keys':
         keys_list = memeapi.get_keys()
         result = ''
