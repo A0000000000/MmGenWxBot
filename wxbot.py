@@ -332,10 +332,10 @@ def process_gen_text(current_session, cmds):
                 args[cmd] = int(arg)
                 index += 2
             elif cmd in bool_args:
-                if arg.lower() == 'true' or arg != '0':
-                    args[cmd] = True
-                else:
+                if arg.lower() == 'false' or arg == '0':
                     args[cmd] = False
+                else:
+                    args[cmd] = True
                 index += 2
             elif cmd in enum_args:
                 args_list = enum_args[cmd]
