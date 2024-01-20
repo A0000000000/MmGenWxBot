@@ -59,18 +59,20 @@ def gen_gen_pic(params):
         for img in params['images']:
             images.append(('images', (img, open(img, 'rb'), 'image/' + img.split('.')[-1], {})))
         res = requests.post(url, data={
-            'texts': params['texts']
+            'texts': params['texts'],
+            'args': json.dumps(params['args'])
         }, files=images)
     elif len(params['texts']) > 0:
         res = requests.post(url, data={
-            'texts': params['texts']
+            'texts': params['texts'],
+            'args': json.dumps(params['args'])
         })
     elif len(params['images']) > 0:
         for img in params['images']:
             images.append(('images', (img, open(img, 'rb'), 'image/' + img.split('.')[-1], {})))
-        res = requests.post(url, files=images)
+        res = requests.post(url, files=images, data={'args': json.dumps(params['args'])})
     else:
-        res = requests.post(url)
+        res = requests.post(url, data={'args': json.dumps(params['args'])})
     if res is None:
         return None
     log.logi(TAG, 'gen_gen_pic request end')

@@ -17,6 +17,16 @@ global_chat_session = {
 
 TAG = 'wxbot'
 
+# Todo：自定义参数暂时写死，后面看看要不要移动到配置文件中，主要meme-generator的文档里参数列表里就这几个
+int_args = ['pic', 'number', 'ratio']
+bool_args = ['person', 'circle', 'black']
+enum_args = {
+    'mode': ['normal', 'loop', 'circle'],
+    'position': ['right', 'left', 'both'],
+    'direction': ['left', 'right', 'top', 'bottom']
+}
+string_args = ['time', 'name']
+
 
 def send_message(session, message):
     log.logi(TAG, 'send_message session = ' + str(session) + ', message = ' + str(message))
@@ -174,7 +184,7 @@ def dispatch_cmd(current_session, cmds):
     if cmds[1] == 'cmd':
         process_cmd(current_session, cmds)
     else:
-        process_text(current_session, cmds)
+        process_gen_text(current_session, cmds)
 
 
 # admin操作不需要权限校验
@@ -251,6 +261,8 @@ def process_cmd(current_session, cmds):
     remove_session(current_session)
 
 
+# Todo: 现在用户权限是全局的作用域，这里设计并不是很好，应该按照“私聊”、“群聊”分别设置权限
+# Todo：后续这里重构一下
 def deal_add_remove(current_session, cmds):
     log.logi(TAG, 'deal_add_remove')
     cmd = cmds[2]
@@ -302,29 +314,65 @@ def deal_add_remove(current_session, cmds):
 
 
 # 处理文本等逻辑
-def process_text(current_session, cmds):
-    log.logi(TAG, 'process_text')
+def process_gen_text(current_session, cmds):
+    log.logi(TAG, 'process_gen_text')
     if len(cmds) < 3:
         send_message(current_session, '@%s\u2005 缺少参数' % current_session['session_username'])
         remove_session(current_session)
         return
+    text_params = []
+    args = {}
+    index = 2
+    while index < len(cmds):
+        item = cmds[index]
+        if item.startswith('#') and index + 1 < len(cmds):
+            cmd = item[1::]
+            arg = cmds[index + 1]
+            if cmd in int_args and arg.isdigit():
+                args[cmd] = int(arg)
+                index += 2
+            elif cmd in bool_args:
+                if arg.lower() == 'true' or arg != '0':
+                    args[cmd] = True
+                else:
+                    args[cmd] = False
+                index += 2
+            elif cmd in enum_args:
+                args_list = enum_args[cmd]
+                flag = False
+                for arg_item in args_list:
+                    if arg_item.startswith(arg):
+                        args[cmd] = arg_item
+                        index += 2
+                        flag = True
+                        break
+                if not flag:
+                    text_params.append(item)
+                    index += 1
+            elif cmd in string_args:
+                args[cmd] = arg
+                index += 2
+            else:
+                text_params.append(item)
+                index += 1
+            continue
+        text_params.append(item)
+        index += 1
     key = cmds[1]
     info = memeapi.get_keyinfo(key)
-    if info is not None:
-        current_session['info'] = info
-        pic_count = 0
-        if cmds[2] == '#pic' and len(cmds) > 3 and cmds[3].isdigit():
-            pic_count = int(cmds[3])
-            current_session['text_params'] = cmds[4::]
-        else:
-            current_session['text_params'] = cmds[2::]
-        current_session['pic_count'] = pic_count
-        current_session['pic_list'] = []
-        current_session['pic_result'] = ''
-        process_gen(current_session)
-    else:
+    if info is None:
         send_message(current_session, '@%s\u2005 没有对应的key' % current_session['session_username'])
         remove_session(current_session)
+    else:
+        current_session['text_params'] = text_params
+        if 'pic' in args:
+            current_session['pic_count'] = args['pic']
+            del args['pic']
+        current_session['info'] = info
+        current_session['pic_list'] = []
+        current_session['pic_result'] = ''
+        current_session['args'] = args
+        process_gen(current_session)
 
 
 # 处理图片下载等逻辑
@@ -354,13 +402,14 @@ def process_gen(current_session):
         send_message(current_session, '@%s\u2005 图片数量不符合预期' % current_session['session_username'])
         remove_session(current_session)
         return
-
+    target_args = filter_and_gen_args(current_session['args'], info)
     if len(current_session['pic_list']) == current_session['pic_count']:
         params = {
             'texts': current_session['text_params'],
             'images': current_session['pic_list'],
             'key': current_session['info']['key'],
-            'nickname': current_session['session_username']
+            'nickname': current_session['session_username'],
+            'args': target_args
         }
         task = Thread(target=gen_pic_inner, args=(current_session, params))
         task.start()
@@ -368,6 +417,12 @@ def process_gen(current_session):
         send_message(current_session, '@%s\u2005 图片数量过多' % current_session['session_username'])
         remove_session(current_session)
         return
+
+
+def filter_and_gen_args(args, info):
+    # Todo: 增加真实的参数校验，主要是类型太复杂了，不好校验，暂时先不校验了
+    # 先占好位置
+    return args
 
 
 def gen_pic_inner(current_session, params):
